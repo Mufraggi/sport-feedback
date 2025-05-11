@@ -31,7 +31,9 @@ jobs:
         run: yarn --version
 
       - name: Install dependencies with Yarn 4
-        run: yarn install --immutable
+        run: |
+          yarn cache clean
+          yarn install --immutable
 
       - name: Run ESLint
         run: yarn lint
