@@ -1,9 +1,13 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 
-const StarRating = ({ rating, maxStars = 5, onChange }) => (
-    <View style={{ flexDirection: 'row' }}>
-        {Array.from({ length: maxStars }).map((_, i) => (
+const StarRating = ({rating, maxStars = 5, onChange}: {
+    rating: number,
+    maxStars?: number,
+    onChange: (rating: number) => void
+}) => (
+    <View style={{flexDirection: 'row'}}>
+        {Array.from({length: maxStars}).map((_, i) => (
             <TouchableOpacity key={i} onPress={() => onChange(i + 1)}>
                 <Text style={[styles.star, i < rating ? styles.filled : styles.empty]}>
                     {i < rating ? '★' : '☆'}
