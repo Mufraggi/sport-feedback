@@ -8,7 +8,7 @@ import Animated, {
     withTiming,
 } from 'react-native-reanimated';
 import FloatingActionButton from '@/components/FloatingActionButton';
-
+import "../global.css"
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export default function RootLayout() {

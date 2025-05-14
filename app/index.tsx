@@ -9,7 +9,7 @@ export default function Index() {
             <FlatList data={data}
                       keyExtractor={(index) => index.toString()}
                       renderItem={(index) => <CardFeedback
-                          type={'jbb'} date={new Date().getDate().toString()}
+                          type={'jbb'} date={new Date()}
                           feeling={4}
                           duration={10}/>}
             />

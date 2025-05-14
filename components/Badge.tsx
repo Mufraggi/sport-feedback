@@ -1,23 +1,10 @@
 import React from 'react';
-import { Text, View, StyleSheet } from 'react-native';
+import { Text, View } from 'react-native';
 
-const Badge = ({ label }: { label: string; variant?: string }) => (
-    <View style={styles.badge}>
-        <Text style={styles.text}>{label}</Text>
+const Badge = ({ label, variant = 'default' }: { label: string; variant?: string }) => (
+    <View className="px-2 py-1 bg-slate-200 rounded-lg">
+        <Text className="text-xs text-slate-800">{label}</Text>
     </View>
 );
-
-const styles = StyleSheet.create({
-    badge: {
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        backgroundColor: '#e2e8f0',
-        borderRadius: 8,
-    },
-    text: {
-        fontSize: 12,
-        color: '#1e293b',
-    },
-});
 
 export default Badge;

@@ -1,11 +1,11 @@
-import {View, StyleSheet,Text} from "react-native";
+import { View, Text } from "react-native";
 import Badge from "./Badge";
 import StarRating from "@/components/Stars";
 import { format } from 'date-fns';
 
 type Workout = {
     type: string;
-    date: string;
+    date: Date;
     feeling: number;
     duration: number;
     notes?: string;
@@ -13,50 +13,22 @@ type Workout = {
 
 export default function CardFeedback(item: Workout) {
     return (
-        <View style={styles.card}>
-            <View style={styles.cardHeader}>
+        <View className="bg-slate-100 rounded-xl p-3">
+            <View className="flex-row justify-between items-center mb-2">
                 <Badge label={item.type} variant="secondary" />
                 <StarRating rating={item.feeling} maxStars={5} onChange={() => {}} />
             </View>
 
-            <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>📅 {format(new Date(item.date), 'dd/MM/yyyy')}</Text>
+            <View className="flex-row items-center my-0.5">
+                <Text className="text-sm text-gray-800">📅 {format(item.date, 'dd/MM/yyyy')}</Text>
             </View>
-            <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>⏱ {item.duration} minutes</Text>
+            <View className="flex-row items-center my-0.5">
+                <Text className="text-sm text-gray-800">⏱ {item.duration} minutes</Text>
             </View>
 
             {item.notes && (
-                <Text style={styles.notes}>📝 {item.notes}</Text>
+                <Text className="mt-2 text-xs text-gray-600 italic">📝 {item.notes}</Text>
             )}
-        </View>)
+        </View>
+    );
 }
-
-const styles = StyleSheet.create({
-    card: {
-        backgroundColor: '#f1f5f9',
-        borderRadius: 12,
-        padding: 12,
-    },
-    cardHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 8,
-    },
-    infoRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginVertical: 2,
-    },
-    infoLabel: {
-        fontSize: 14,
-        color: '#333',
-    },
-    notes: {
-        marginTop: 8,
-        fontSize: 13,
-        color: '#555',
-        fontStyle: 'italic',
-    },
-});

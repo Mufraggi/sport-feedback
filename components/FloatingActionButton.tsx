@@ -1,9 +1,9 @@
 import Animated, {SharedValue, useAnimatedStyle, withDelay, withSpring, withTiming} from "react-native-reanimated";
 import React from "react";
-import {Pressable, StyleSheet, Text, View} from "react-native"; // Ajout de View
+import {Pressable, Text, View} from "react-native";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-const AnimatedView = Animated.createAnimatedComponent(View); // Créer une View animée
+const AnimatedView = Animated.createAnimatedComponent(View);
 
 const SPRING_CONFIG = {
     duration: 1200,
@@ -48,7 +48,7 @@ export default function FloatingActionButton({isExpanded, index, buttonLetter, l
         };
     });
 
-    // Style animé pour le bouton lui-même (si on veut une animation d'échelle spécifique au bouton)
+    // Style animé pour le bouton lui-même
     const buttonAnimatedStyle = useAnimatedStyle(() => {
         const scaleValue = isExpanded.value ? 1 : 0;
         return {
@@ -58,71 +58,38 @@ export default function FloatingActionButton({isExpanded, index, buttonLetter, l
         }
     })
 
-
     return (
-        <AnimatedView style={[styles.actionButtonContainer, containerAnimatedStyle]}>
-            <AnimatedView style={[styles.labelContainer, labelContainerAnimatedStyle]}>
-                <Text style={styles.labelText}>{label}</Text>
+        <AnimatedView className="absolute right-0 bottom-0 flex-row items-center justify-center z-[-1]" style={containerAnimatedStyle}>
+            <AnimatedView
+                className="py-1 px-2 rounded w-[100px] flex-row items-center justify-center mr-[5px] shadow-sm"
+                style={[
+                    labelContainerAnimatedStyle,
+                    {
+                        shadowColor: '#171717',
+                        shadowOffset: {width: -0.5, height: 2},
+                        shadowOpacity: 0.2,
+                        shadowRadius: 2,
+                        elevation: 2,
+                    }
+                ]}
+            >
+                <Text className="text-black text-xs">{label}</Text>
             </AnimatedView>
-            <AnimatedPressable style={[styles.button, styles.shadow, buttonAnimatedStyle]}>
-                <Text style={styles.content}>{buttonLetter}</Text>
+            <AnimatedPressable
+                className="w-10 h-10 bg-[#82cab2] rounded-full flex justify-center items-center"
+                style={[
+                    buttonAnimatedStyle,
+                    {
+                        shadowColor: '#171717',
+                        shadowOffset: {width: -0.5, height: 3.5},
+                        shadowOpacity: 0.2,
+                        shadowRadius: 3,
+                        elevation: 3,
+                    }
+                ]}
+            >
+                <Text className="text-[#f8f9ff] font-bold">{buttonLetter}</Text>
             </AnimatedPressable>
         </AnimatedView>
     );
 }
-
-const styles = StyleSheet.create({
-    // Nouveau conteneur pour chaque action (label + bouton)
-    actionButtonContainer: {
-        position: 'absolute',
-        right: 0,
-        bottom: 0,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center', // Changez pour centrer horizontalement
-        zIndex: -1,
-    },
-    // Conteneur pour le label
-    labelContainer: {
-        paddingVertical: 4,
-        paddingHorizontal: 8,
-        borderRadius: 5,
-        marginRight: LABEL_OFFSET,
-        shadowColor: '#171717',
-        shadowOffset: {width: -0.5, height: 2},
-        shadowOpacity: 0.2,
-        shadowRadius: 2,
-        elevation: 2,
-        width: 100,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center', // Centre le texte dans le conteneur du label
-    },
-    labelText: {
-        color: 'black',
-        fontSize: 12,
-    },
-    // Style du bouton (Pressable)
-    button: {
-        width: 40,
-        height: 40,
-        backgroundColor: '#82cab2',
-        borderRadius: 20,
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    // Style de l'ombre (peut rester sur le bouton)
-    shadow: {
-        shadowColor: '#171717',
-        shadowOffset: {width: -0.5, height: 3.5},
-        shadowOpacity: 0.2,
-        shadowRadius: 3,
-        elevation: 3,
-    },
-    // Texte à l'intérieur du bouton
-    content: {
-        color: '#f8f9ff',
-        fontWeight: 'bold',
-    },
-});
