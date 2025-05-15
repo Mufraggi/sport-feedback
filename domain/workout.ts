@@ -26,6 +26,7 @@ export type WorkoutCard = Pick<Workout, "id" | "date" | "type" | "feeling" | "fo
     shortNote?: string;
 };
 
+
 export function toWorkoutCard(workout: Workout): WorkoutCard {
     return {
         id: workout.id,
@@ -35,6 +36,6 @@ export function toWorkoutCard(workout: Workout): WorkoutCard {
         focusOfTheDay: workout.focusOfTheDay,
         duration: workout.duration,
         tags: workout.tags,
-        shortNote: workout.notes ? workout.notes.slice(0, 100) : undefined, // Exemple: 1ère phrase ou 100 premiers caractères
+        shortNote: workout.notes ? workout.notes.slice(0, 100) : undefined,
     };
 }

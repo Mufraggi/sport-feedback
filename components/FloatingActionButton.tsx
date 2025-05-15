@@ -14,11 +14,12 @@ const SPRING_CONFIG = {
 const OFFSET = 60; // Espacement vertical entre les boutons étendus
 const LABEL_OFFSET = 5; // Espacement horizontal entre le label et le bouton
 
-export default function FloatingActionButton({isExpanded, index, buttonLetter, label}: {
+export default function FloatingActionButton({isExpanded, index, buttonLetter, label, onPress}: {
     isExpanded: SharedValue<boolean>,
     index: number,
     buttonLetter: string,
-    label: string
+    label: string,
+    onPress: () => void,
 }) {
     const delay = index * 100;
 
@@ -59,7 +60,8 @@ export default function FloatingActionButton({isExpanded, index, buttonLetter, l
     })
 
     return (
-        <AnimatedView className="absolute right-0 bottom-0 flex-row items-center justify-center z-[-1]" style={containerAnimatedStyle}>
+        <AnimatedView className="absolute right-0 bottom-0 flex-row items-center justify-center z-[-1]"
+                      style={containerAnimatedStyle}>
             <AnimatedView
                 className="py-1 px-2 rounded w-[100px] flex-row items-center justify-center mr-[5px] shadow-sm"
                 style={[
@@ -86,7 +88,7 @@ export default function FloatingActionButton({isExpanded, index, buttonLetter, l
                         shadowRadius: 3,
                         elevation: 3,
                     }
-                ]}
+                ]} onPress={onPress}
             >
                 <Text className="text-[#f8f9ff] font-bold">{buttonLetter}</Text>
             </AnimatedPressable>
