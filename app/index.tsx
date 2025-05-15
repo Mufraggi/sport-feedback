@@ -1,9 +1,10 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {FlatList, Text, View} from 'react-native';
 import CardFeedback from "@/components/CardFeedback";
 import {toWorkoutCard, Workout} from "@/domain/workout";
 import {UUID} from "crypto";
 import uuid from 'react-native-uuid';
+import { useBottomSheet } from '@/components/BottomSheetContext';
 
 const fakeWorkouts: Workout[] = [
     {
@@ -147,6 +148,8 @@ const fakeWorkouts: Workout[] = [
 ];
 
 export default function Index() {
+    const [selectedId, setSelectedId] = useState<UUID>();
+    const { openBottomSheet } = useBottomSheet();
     const workoutCards = fakeWorkouts.map(toWorkoutCard);
 
     return (
@@ -154,9 +157,10 @@ export default function Index() {
             <Text>Hello</Text>
             <FlatList
                 data={workoutCards}
-                contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 8 }}
-                ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+                contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 8 }}
+                ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
                 keyExtractor={(item) => item.id.toString()}
+                extraData={selectedId}
                 renderItem={({item}) => (
                     <CardFeedback
                         id={item.id}
@@ -167,6 +171,7 @@ export default function Index() {
                         date={item.date}
                         feeling={item.feeling}
                         duration={item.duration}
+                        onPress={() => openBottomSheet('page2', { id: item.id })} // <<< MODIFICATION ICI
                     />
                 )}
             />

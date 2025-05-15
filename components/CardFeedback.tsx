@@ -1,10 +1,15 @@
-import {View, Text} from "react-native";
+import {View, Text, TouchableOpacity} from "react-native";
 import {format} from "date-fns";
-import { WorkoutCard} from "../domain/workout";
+import {WorkoutCard} from "../domain/workout";
 import {Badge} from "./Badge";
 import {FeelingMeter} from "./FeelingMeter";
 
-export default function CardFeedback(item: WorkoutCard) {
+type CardFeedbackProps = WorkoutCard & {
+    onPress: () => void;
+    selected?: boolean;
+};
+
+export default function CardFeedback(item: CardFeedbackProps) {
     const getTypeBorderColor = (type: string) => {
         switch (type) {
             case "JJB GI":
@@ -21,10 +26,12 @@ export default function CardFeedback(item: WorkoutCard) {
     const formattedDate = format(item.date, "MMMM d");
 
     return (
-        <View
-            className={`bg-white rounded-xl p-4 border-l-4 ${getTypeBorderColor(
+        <TouchableOpacity
+            onPress={item.onPress}
+            activeOpacity={0.7}
+            className={`bg-white rounded-xl px-4 py-2 border-l-4 ${getTypeBorderColor(
                 item.type
-            )} shadow-sm`}
+            )} shadow-sm ${item.selected ? "bg-purple-100" : ""}`}
         >
             <View className="flex-row justify-between items-center mb-3">
                 <View className="flex-row items-center">
@@ -32,7 +39,7 @@ export default function CardFeedback(item: WorkoutCard) {
                         {formattedDate}
                     </Text>
                 </View>
-                <Badge label={item.type} variant="outline"/>
+                <Badge label={item.type} variant="outline" />
             </View>
 
             {item.focusOfTheDay && (
@@ -49,7 +56,7 @@ export default function CardFeedback(item: WorkoutCard) {
                             ⏱ {item.duration} min
                         </Text>
                     </View>
-                    <FeelingMeter feeling={item.feeling}/>
+                    <FeelingMeter feeling={item.feeling} />
                 </View>
             </View>
 
@@ -71,6 +78,6 @@ export default function CardFeedback(item: WorkoutCard) {
                     ))}
                 </View>
             )}
-        </View>
+        </TouchableOpacity>
     );
 }
