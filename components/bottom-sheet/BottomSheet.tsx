@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View, Dimensions } from 'react-native';
 import Animated, {
     SharedValue,
     useAnimatedStyle,
@@ -18,6 +18,8 @@ type BottomSheetProps = {
 };
 
 export default function BottomSheet({ isOpen, toggleSheet, duration = 500, children }: BottomSheetProps) {
+    const { height: screenHeight } = Dimensions.get('window');
+    const MAX_HEIGHT_PERCENTAGE = 0.9; // 90% de la hauteur de l'écran
     const height = useSharedValue(0);
 
     const progress = useDerivedValue(() =>
@@ -26,6 +28,7 @@ export default function BottomSheet({ isOpen, toggleSheet, duration = 500, child
 
     const sheetAnimatedStyle = useAnimatedStyle(() => ({
         transform: [{ translateY: progress.value * 2 * height.value }],
+        maxHeight: screenHeight * MAX_HEIGHT_PERCENTAGE, // Limiter à 90% de la hauteur
     }));
 
     const backdropAnimatedStyle = useAnimatedStyle(() => ({
@@ -51,7 +54,7 @@ export default function BottomSheet({ isOpen, toggleSheet, duration = 500, child
                 onLayout={(e) => {
                     height.value = e.nativeEvent.layout.height;
                 }}
-                className={`absolute bottom-0 w-full rounded-t-2xl px-6 py-4 z-20 ${backgroundClass}`}
+                className={`absolute bottom-0 w-full rounded-t-2xl z-20 ${backgroundClass}`}
                 style={sheetAnimatedStyle}
             >
                 {children}

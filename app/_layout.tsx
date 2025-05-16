@@ -3,7 +3,7 @@ import {SafeAreaView, StyleSheet} from 'react-native';
 import {Stack} from 'expo-router';
 import "../global.css"
 import {BottomSheetProvider} from "@/components/bottom-sheet/BottomSheetContext";
-import {GlobalBottomSheet} from "@/components/GlobalBottomSheet";
+import {GlobalBottomSheet} from "@/components/bottom-sheet/GlobalBottomSheet";
 import FabContainer from "@/components/fab-buttom/FabContainer";
 import {createTables, getDBConnection,insertSampleWorkouts} from "@/db/database";
 import {Provider} from "react-redux";
