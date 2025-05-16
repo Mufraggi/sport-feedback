@@ -1,0 +1,69 @@
+import {createAsyncThunk, createSlice, PayloadAction} from '@reduxjs/toolkit';
+import {Workout} from "@/domain/workout";
+import {getDBConnection} from "@/db/database";
+
+interface WorkoutsState {
+    workouts: Workout[];
+    loading: boolean;
+    error?: string;
+}
+
+const initialState: WorkoutsState = {
+    workouts: [],
+    loading: false,
+};
+const parseJSONSafely = <T>(value: unknown, fallback: T): T => {
+    if (typeof value === 'string') {
+        try {
+            return JSON.parse(value) as T;
+        } catch {
+            return fallback;
+        }
+    }
+    if (typeof value === 'object' && value !== null) {
+        return value as T;
+    }
+    return fallback;
+};
+
+export const loadWorkouts = createAsyncThunk('workouts/load', async () => {
+    const db = await getDBConnection();
+    const result = await db.getAllAsync<Workout>(`SELECT *
+                                                  FROM workouts`);
+    return result.map((w) => ({
+        ...w,
+        date: w.date,
+        tags: parseJSONSafely<string[]>(w.tags, []),
+        injuries: parseJSONSafely<string[]>(w.injuries, []),
+        sparringRounds: parseJSONSafely<Workout['sparringRounds']>(w.sparringRounds, []),
+    }));
+});
+
+export const workoutsSlice = createSlice({
+    name: 'workouts',
+    initialState,
+    reducers: {
+        addWorkout: (state, action: PayloadAction<Workout>) => {
+            state.workouts.unshift(action.payload);
+        },
+        // Tu pourras ajouter update/delete ici aussi
+    },
+    extraReducers: (builder) => {
+        builder
+            .addCase(loadWorkouts.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(loadWorkouts.fulfilled, (state, action) => {
+                state.loading = false;
+                state.workouts = action.payload;
+            })
+            .addCase(loadWorkouts.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message;
+            });
+    },
+});
+
+export const {addWorkout} = workoutsSlice.actions;
+
+export default workoutsSlice.reducer;

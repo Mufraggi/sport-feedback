@@ -1,5 +1,5 @@
-import {useBottomSheet} from "@/components/BottomSheetContext";
-import BottomSheetComponent from "@/components/BottomSheet";
+import {useBottomSheet} from "@/components/bottom-sheet/BottomSheetContext";
+import BottomSheetComponent from "@/components/bottom-sheet/BottomSheet";
 import {Text, View} from "react-native";
 import React from "react";
 import {Workout} from "@/domain/workout";

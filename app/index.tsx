@@ -4,7 +4,8 @@ import CardFeedback from "@/components/CardFeedback";
 import {toWorkoutCard, Workout} from "@/domain/workout";
 import {UUID} from "crypto";
 import uuid from 'react-native-uuid';
-import { useBottomSheet } from '@/components/BottomSheetContext';
+import { useBottomSheet } from '@/components/bottom-sheet/BottomSheetContext';
+import {useWorkouts} from "@/hooks/useWorkouts";
 
 const fakeWorkouts: Workout[] = [
     {
@@ -150,13 +151,17 @@ const fakeWorkouts: Workout[] = [
 export default function Index() {
     const [selectedId, setSelectedId] = useState<UUID>();
     const { openBottomSheet } = useBottomSheet();
-    const workoutCards = fakeWorkouts.map(toWorkoutCard);
-
+    const { workouts, loading } = useWorkouts();
+    if (loading) return <Text>Chargement...</Text>;
+    console.log("--------");
+    console.log(workouts);
+    workouts.forEach(w => console.log(w));
+    console.log("--------");
     return (
         <View testID="home-screen">
             <Text>Hello</Text>
             <FlatList
-                data={workoutCards}
+                data={workouts.map(toWorkoutCard)}
                 contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 8 }}
                 ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
                 keyExtractor={(item) => item.id.toString()}

@@ -1,96 +1,40 @@
-import React from 'react';
-import {Pressable, SafeAreaView, StyleSheet, View} from 'react-native';
+import React, {useEffect} from 'react';
+import {SafeAreaView, StyleSheet} from 'react-native';
 import {Stack} from 'expo-router';
-import Animated, {interpolate, useAnimatedStyle, useSharedValue, withTiming} from 'react-native-reanimated';
-import OriginalFloatingActionButton from '@/components/FloatingActionButton'; // Renommé pour éviter confusion
 import "../global.css"
-import {BottomSheetProvider, useBottomSheet} from "@/components/BottomSheetContext";
+import {BottomSheetProvider} from "@/components/bottom-sheet/BottomSheetContext";
 import {GlobalBottomSheet} from "@/components/GlobalBottomSheet";
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
-
-function FabContainer() {
-    const {openBottomSheet} = useBottomSheet();
-    const isExpanded = useSharedValue(false);
-
-    const handlePress = () => {
-        isExpanded.value = !isExpanded.value;
-    };
-
-    const plusIconStyle = useAnimatedStyle(() => {
-        const moveValue = interpolate(Number(isExpanded.value), [0, 1], [0, 2]);
-        const translateValue = withTiming(moveValue);
-        const rotateValue = isExpanded.value ? '45deg' : '0deg';
-
-        return {
-            transform: [
-                {translateX: translateValue},
-                {rotate: withTiming(rotateValue)},
-            ],
-        };
-    });
-
-    // Action pour le bouton "Add Feedback"
-    const handleAddFeedbackPress = () => {
-        openBottomSheet('page1'); // 'page1' est l'identifiant pour le contenu du FAB
-    };
-
-    return (
-        <View style={styles.fabContainer}>
-            <View style={styles.buttonContainer}>
-                <AnimatedPressable
-                    onPress={handlePress} // Ce bouton gère l'expansion
-                    style={[styles.shadow, mainButtonStyles.button]}>
-                    <Animated.Text style={[plusIconStyle, mainButtonStyles.content]}>
-                        +
-                    </Animated.Text>
-                </AnimatedPressable>
-                {/* Ce FloatingActionButton est un des boutons étendus */}
-                {/* Assurez-vous que votre composant OriginalFloatingActionButton accepte onPress */}
-                <OriginalFloatingActionButton
-                    isExpanded={isExpanded}
-                    index={1} // ou l'index approprié
-                    buttonLetter={'F'}
-                    label={'Add Feedback'}
-                    onPress={handleAddFeedbackPress} // Ajoutez cette prop à votre composant
-                />
-            </View>
-        </View>
-    );
-}
-
+import FabContainer from "@/components/fab-buttom/FabContainer";
+import {createTables, getDBConnection,insertSampleWorkouts} from "@/db/database";
+import {Provider} from "react-redux";
+import {store} from "@/store/store";
 
 export default function RootLayout() {
+    useEffect(() => {
+        const setupDb = async () => {
+            const db = await getDBConnection();
+            await createTables(db);
+
+            // À ne pas faire à chaque démarrage une fois que tu as des données réelles :
+            await insertSampleWorkouts();
+        };
+
+        setupDb().catch((err) => {
+            console.error("Erreur lors de l'initialisation de la DB:", err);
+        });
+    }, []);
     return (
-        <BottomSheetProvider>
-            <SafeAreaView style={styles.container}>
-                <Stack/>
-                <GlobalBottomSheet/>
-                <FabContainer/>
-            </SafeAreaView>
-        </BottomSheetProvider>
+        <Provider store={store}>
+            <BottomSheetProvider>
+                <SafeAreaView style={styles.container}>
+                    <Stack/>
+                    <GlobalBottomSheet/>
+                    <FabContainer/>
+                </SafeAreaView>
+            </BottomSheetProvider>
+        </Provider>
     );
 }
-
-// Styles (mainButtonStyles, styles) restent les mêmes
-// ... (copiez vos styles ici)
-const mainButtonStyles = StyleSheet.create({
-    button: {
-        zIndex: 1,
-        height: 56,
-        width: 56,
-        borderRadius: 100,
-        backgroundColor: '#b58df1',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    content: {
-        fontSize: 24,
-        color: '#f8f9ff',
-    },
-});
 
 const styles = StyleSheet.create({
     container: {
