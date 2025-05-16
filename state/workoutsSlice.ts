@@ -1,6 +1,7 @@
-import {createAsyncThunk, createSlice, PayloadAction} from '@reduxjs/toolkit';
-import {Workout} from "@/domain/workout";
-import {getDBConnection} from "@/db/database";
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { Workout } from "@/domain/workout";
+import { getDBConnection } from "@/db/database";
+import { RootState } from "@/store/store";
 
 interface WorkoutsState {
     workouts: Workout[];
@@ -12,6 +13,7 @@ const initialState: WorkoutsState = {
     workouts: [],
     loading: false,
 };
+
 const parseJSONSafely = <T>(value: unknown, fallback: T): T => {
     if (typeof value === 'string') {
         try {
@@ -28,8 +30,7 @@ const parseJSONSafely = <T>(value: unknown, fallback: T): T => {
 
 export const loadWorkouts = createAsyncThunk('workouts/load', async () => {
     const db = await getDBConnection();
-    const result = await db.getAllAsync<Workout>(`SELECT *
-                                                  FROM workouts`);
+    const result = await db.getAllAsync<Workout>(`SELECT * FROM workouts`);
     return result.map((w) => ({
         ...w,
         date: w.date,
@@ -39,6 +40,11 @@ export const loadWorkouts = createAsyncThunk('workouts/load', async () => {
     }));
 });
 
+// Sélecteur corrigé : prend state ET id en paramètre
+export const selectWorkoutById = (state: RootState, id: string): Workout | undefined => {
+    return state.workouts.workouts.find(w => w.id === id);
+}
+
 export const workoutsSlice = createSlice({
     name: 'workouts',
     initialState,
@@ -46,7 +52,7 @@ export const workoutsSlice = createSlice({
         addWorkout: (state, action: PayloadAction<Workout>) => {
             state.workouts.unshift(action.payload);
         },
-        // Tu pourras ajouter update/delete ici aussi
+        // update/delete à ajouter ici si besoin
     },
     extraReducers: (builder) => {
         builder
@@ -64,6 +70,6 @@ export const workoutsSlice = createSlice({
     },
 });
 
-export const {addWorkout} = workoutsSlice.actions;
+export const { addWorkout } = workoutsSlice.actions;
 
 export default workoutsSlice.reducer;

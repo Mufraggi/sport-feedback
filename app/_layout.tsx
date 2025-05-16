@@ -13,7 +13,7 @@ export default function RootLayout() {
     useEffect(() => {
         const setupDb = async () => {
             const db = await getDBConnection();
-            await createTables(db);
+            //await createTables(db);
 
             // À ne pas faire à chaque démarrage une fois que tu as des données réelles :
             await insertSampleWorkouts();
