@@ -153,10 +153,7 @@ export default function Index() {
     const { openBottomSheet } = useBottomSheet();
     const { workouts, loading } = useWorkouts();
     if (loading) return <Text>Chargement...</Text>;
-    console.log("--------");
-    console.log(workouts);
-    workouts.forEach(w => console.log(w));
-    console.log("--------");
+
     return (
         <View testID="home-screen">
             <Text>Hello</Text>
