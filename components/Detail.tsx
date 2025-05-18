@@ -1,25 +1,28 @@
-/*import React from "react";
-import { View, Text, ScrollView, SafeAreaView } from "react-native";
-import { format } from "date-fns";
-import type { Workout } from "../types/workout";
+import React, {useEffect, useState} from "react";
+import {SafeAreaView, ScrollView, Text, View} from "react-native";
+import {format} from "date-fns";
+import {useWorkouts} from "@/hooks/useWorkouts";
+import {UUID} from "crypto";
+import {Workout} from "@/domain/workout";
+
 
 // Meter component for ratings
-function RatingMeter({ value, label, maxValue = 10, colorClass = "bg-green-500" }: {
+function RatingMeter({value, label, maxValue = 10, colorClass = "bg-green-500"}: {
     value: number;
     label: string;
     maxValue?: number;
     colorClass?: string;
 }) {
     return (
-        <View className="mb-3">
+        <View className="mb-3 w-full">
             <View className="flex-row justify-between mb-1">
                 <Text className="text-sm text-gray-600">{label}</Text>
                 <Text className="text-sm font-medium">{value}/{maxValue}</Text>
             </View>
-            <View className="h-2 bg-gray-200 rounded-full overflow-hidden">
+            <View className="h-2 bg-gray-200 rounded-full overflow-hidden w-full">
                 <View
                     className={`h-full ${colorClass}`}
-                    style={{ width: `${(value / maxValue) * 100}%` }}
+                    style={{width: `${(value / maxValue) * 100}%`}}
                 />
             </View>
         </View>
@@ -27,7 +30,7 @@ function RatingMeter({ value, label, maxValue = 10, colorClass = "bg-green-500" 
 }
 
 // Badge component for type and tags
-function Badge({ label, variant = "default" }: { label: string; variant?: string }) {
+function Badge({label, variant = "default"}: { label: string; variant?: string }) {
     // Function to determine type color
     const getTypeColor = (type: string, isType = false) => {
         if (isType) {
@@ -54,7 +57,7 @@ function Badge({ label, variant = "default" }: { label: string; variant?: string
 }
 
 // Outcome badge for sparring rounds
-function OutcomeBadge({ outcome }: { outcome: string }) {
+function OutcomeBadge({outcome}: { outcome: string }) {
     const getOutcomeStyle = (outcome: string) => {
         switch (outcome) {
             case "win":
@@ -78,40 +81,47 @@ function OutcomeBadge({ outcome }: { outcome: string }) {
 }
 
 // Section header component
-function SectionHeader({ title }: { title: string }) {
+function SectionHeader({title}: { title: string }) {
     return (
-        <View className="border-b border-gray-200 pb-1 mb-3">
+        <View className="border-b border-gray-200 pb-1 mb-3 w-full">
             <Text className="text-lg font-bold text-gray-800">{title}</Text>
         </View>
     );
 }
 
-export default function WorkoutDetailView({ workout }: { workout: Workout }) {
-    // Function to determine type color for the left border
-    const getTypeBorderColor = (type: string) => {
-        switch (type) {
-            case "JJB GI":
-                return "border-l-purple-500";
-            case "JJB NO GI":
-                return "border-l-blue-500";
-            case "GRAPPLING":
-                return "border-l-orange-500";
-            default:
-                return "border-l-gray-500";
-        }
-    };
+export default function WorkoutDetailView({workoutId}: { workoutId: UUID }) {
+    const {getById} = useWorkouts();
+    const [workout, setWorkout] = useState<Workout | null>(null);
 
-    // Format date to display as "Thursday, May 8, 2025"
+    useEffect(() => {
+        const fetchWorkout = async () => {
+            console.log("Fetching workout", workoutId);
+            const data = await getById(workoutId);
+            console.log("Fetched workout", data);
+            if (!data) {
+                return null;
+            }
+            setWorkout(data);
+        };
+        fetchWorkout();
+    }, [workoutId]);
+
+    if (!workout) {
+        return (
+            <View className="flex-1 items-center justify-center">
+                <Text>Loading...</Text>
+            </View>
+        );
+    }
     const formattedDate = format(workout.date, "EEEE, MMMM d, yyyy");
 
     return (
-        <SafeAreaView className="flex-1 bg-gray-50">
-            <ScrollView>
-                <View className={`m-4 bg-white rounded-xl border-l-4 ${getTypeBorderColor(workout.type)} shadow-sm`}>
-    //                {/* Header Section */ /*}*/
-                    /*<View className="p-4 border-b border-gray-100">
-                        <View className="flex-row justify-between items-center mb-2">
-                            <Badge label={workout.type} variant="type" />
+        <SafeAreaView>
+            <ScrollView contentContainerStyle={{flexGrow: 1}} className="w-full">
+                <View className="w-full pb-10">
+                    <View className="p-4 border-b border-gray-100 w-full">
+                        <View className="flex-row justify-between items-center mb-2 w-full">
+                            <Badge label={workout.type} variant="type"/>
                             <Text className="text-sm font-medium text-gray-600">
                                 {workout.duration} minutes
                             </Text>
@@ -123,11 +133,8 @@ export default function WorkoutDetailView({ workout }: { workout: Workout }) {
                             {formattedDate}
                         </Text>
                     </View>
-
-//                    {/* Main Content */ /*}*/
-                    /*<View className="p-4">
-  //                      {/* Goal Achievement */ /*}*/
-                        /*<View className="mb-4 flex-row items-center">
+                    <View className="p-4 w-full">
+                        <View className="mb-4 flex-row items-center w-full">
                             <View className={`w-6 h-6 rounded-full items-center justify-center ${
                                 workout.achievedGoal ? "bg-green-100" : "bg-red-100"
                             }`}>
@@ -143,9 +150,7 @@ export default function WorkoutDetailView({ workout }: { workout: Workout }) {
                                     : "Goal not achieved"}
                             </Text>
                         </View>
-
-                        {/* Metrics Section */ /*}*/
-                        /*<SectionHeader title="Session Metrics" />
+                        <SectionHeader title="Session Metrics"/>
                         <RatingMeter
                             value={workout.feeling}
                             label="Overall Feeling"
@@ -172,15 +177,15 @@ export default function WorkoutDetailView({ workout }: { workout: Workout }) {
                             colorClass="bg-red-500"
                         />
 
-                        {/* Sparring Rounds */ /*}*/
-                        /*{workout.sparringRounds && workout.sparringRounds.length > 0 && (
-                            <View className="mt-4">
-                                <SectionHeader title="Sparring Rounds" />
+
+                        {workout.sparringRounds && workout.sparringRounds.length > 0 && (
+                            <View className="mt-4 w-full">
+                                <SectionHeader title="Sparring Rounds"/>
                                 {workout.sparringRounds.map((round, index) => (
-                                    <View key={index} className="mb-3 p-3 bg-gray-50 rounded-lg">
+                                    <View key={index} className="mb-3 p-3 bg-gray-50 rounded-lg w-full">
                                         <View className="flex-row justify-between items-center mb-1">
                                             <Text className="font-medium">Partner: {round.partner}</Text>
-                                            <OutcomeBadge outcome={round.outcome} />
+                                            <OutcomeBadge outcome={round.outcome}/>
                                         </View>
                                         {round.notes && (
                                             <Text className="text-sm text-gray-600">{round.notes}</Text>
@@ -190,20 +195,19 @@ export default function WorkoutDetailView({ workout }: { workout: Workout }) {
                             </View>
                         )}
 
-                        {/* Notes Section */ /*}*/
-                        /*{workout.notes && (
-                            <View className="mt-4">
-                                <SectionHeader title="Notes" />
+                        {workout.notes && (
+                            <View className="mt-4 w-full">
+                                <SectionHeader title="Notes"/>
                                 <Text className="text-sm text-gray-700 mb-3">
                                     {workout.notes}
                                 </Text>
                             </View>
                         )}
 
-                        {/* Injuries Section - only show if there are injuries */ /*}*/
-                       /* {workout.injuries && workout.injuries.length > 0 && (
-                            <View className="mt-4">
-                                <SectionHeader title="Injuries" />
+
+                        {workout.injuries && workout.injuries.length > 0 && (
+                            <View className="mt-4 w-full">
+                                <SectionHeader title="Injuries"/>
                                 {workout.injuries.map((injury, index) => (
                                     <Text key={index} className="text-sm text-red-600 mb-1">
                                         • {injury}
@@ -212,14 +216,13 @@ export default function WorkoutDetailView({ workout }: { workout: Workout }) {
                             </View>
                         )}
 
-                        {/* Tags Section */ /*}*/
-                        /*{workout.tags && workout.tags.length > 0 && (
-                            <View className="mt-4">
-                                <SectionHeader title="Tags" />
-                                <View className="flex-row flex-wrap">
+                        {workout.tags && workout.tags.length > 0 && (
+                            <View className="mt-4 w-full">
+                                <SectionHeader title="Tags"/>
+                                <View className="flex-row flex-wrap w-full">
                                     {workout.tags.map((tag) => (
                                         <View key={tag} className="mr-2 mb-2">
-                                            <Badge label={tag} />
+                                            <Badge label={tag}/>
                                         </View>
                                     ))}
                                 </View>
@@ -230,4 +233,4 @@ export default function WorkoutDetailView({ workout }: { workout: Workout }) {
             </ScrollView>
         </SafeAreaView>
     );
-}*/
+}
