@@ -1,15 +1,16 @@
 import React from "react";
-import { useBottomSheet } from "@/components/bottom-sheet/BottomSheetContext";
+import {useBottomSheet} from "@/components/bottom-sheet/BottomSheetContext";
 import BottomSheetComponent from "@/components/bottom-sheet/BottomSheet";
-import { Text, View, TouchableOpacity } from "react-native";
+import {Text, TouchableOpacity, View} from "react-native";
 import WorkoutDetailView from "@/components/Detail";
+import {UUID} from "crypto";
 
 export function GlobalBottomSheet() {
-    const { isOpen, closeBottomSheet, activePage, params } = useBottomSheet();
+    const {isOpen, closeBottomSheet, activePage, params} = useBottomSheet();
 
     // Choisir le contenu à afficher en fonction de la page active
     const renderContent = () => {
-        switch(activePage) {
+        switch (activePage) {
             case 'page1':
                 return (
                     <View className="p-5 w-full">
@@ -19,7 +20,8 @@ export function GlobalBottomSheet() {
                 );
             case 'page2':
                 if (params?.id) {
-                    return <WorkoutDetailView workoutId={params.id} />;
+                    const id = params.id as UUID;
+                    return <WorkoutDetailView workoutId={id}/>;
                 } else {
                     return (
                         <View className="p-5 w-full">

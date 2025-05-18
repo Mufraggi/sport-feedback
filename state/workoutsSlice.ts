@@ -1,7 +1,7 @@
-import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Workout } from "@/domain/workout";
-import { getDBConnection } from "@/db/database";
-import { RootState } from "@/store/store";
+import {createAsyncThunk, createSlice, PayloadAction} from '@reduxjs/toolkit';
+import {Workout} from "@/domain/workout";
+import WorkoutRepository from "@/db/repository/workout.repository";
+import {UUID} from "crypto";
 
 interface WorkoutsState {
     workouts: Workout[];
@@ -13,6 +13,10 @@ const initialState: WorkoutsState = {
     workouts: [],
     loading: false,
 };
+
+interface ThunkExtraArgument {
+    repository: WorkoutRepository;
+}
 
 const parseJSONSafely = <T>(value: unknown, fallback: T): T => {
     if (typeof value === 'string') {
@@ -28,10 +32,14 @@ const parseJSONSafely = <T>(value: unknown, fallback: T): T => {
     return fallback;
 };
 
-export const loadWorkouts = createAsyncThunk('workouts/load', async () => {
-    const db = await getDBConnection();
-    const result = await db.getAllAsync<Workout>(`SELECT * FROM workouts`);
-    return result.map((w) => ({
+export const loadWorkouts = createAsyncThunk<
+    Workout[],
+    void,
+    { extra: ThunkExtraArgument }
+>('workouts/load', async (_, {extra}) => {
+    const {repository} = extra;
+    const workouts = await repository.getAllWorkouts();
+    return workouts.map((w) => ({
         ...w,
         date: w.date,
         tags: parseJSONSafely<string[]>(w.tags, []),
@@ -40,10 +48,48 @@ export const loadWorkouts = createAsyncThunk('workouts/load', async () => {
     }));
 });
 
-// Sélecteur corrigé : prend state ET id en paramètre
-export const selectWorkoutById = (state: RootState, id: string): Workout | undefined => {
-    return state.workouts.workouts.find(w => w.id === id);
-}
+
+export const createWorkout = createAsyncThunk<
+    Workout,
+    Workout,
+    { extra: ThunkExtraArgument; rejectValue: string }
+>('workouts/create', async (workout, {extra, rejectWithValue}) => {
+        try {
+            const {repository} = extra;
+            await repository.insertWorkout(workout);
+            return workout;
+        } catch (error) {
+            return rejectWithValue('Failed to insert workout');
+        }
+    }
+);
+
+export const getWorkoutById = createAsyncThunk<
+    Workout | undefined,
+    UUID,
+    { extra: ThunkExtraArgument; rejectValue: string }
+>('workouts/getById',
+    async (id, {extra, rejectWithValue}) => {
+        try {
+            const {repository} = extra;
+            // Fixed method name to match repository implementation
+            const workout = await repository.getWorkoutById(id);
+
+            if (!workout) {
+                return rejectWithValue(`Workout with id ${id} not found`);
+            }
+
+            return {
+                ...workout,
+                date: workout.date,
+                tags: parseJSONSafely<string[]>(workout.tags, []),
+                injuries: parseJSONSafely<string[]>(workout.injuries, []),
+                sparringRounds: parseJSONSafely<Workout['sparringRounds']>(workout.sparringRounds, []),
+            };
+        } catch (error) {
+            return rejectWithValue(`Failed to get workout: ${error}`);
+        }
+    });
 
 export const workoutsSlice = createSlice({
     name: 'workouts',
@@ -66,10 +112,16 @@ export const workoutsSlice = createSlice({
             .addCase(loadWorkouts.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.error.message;
+            })
+            .addCase(createWorkout.fulfilled, (state, action) => {
+                state.workouts.unshift(action.payload);
+            })
+            .addCase(getWorkoutById.rejected, (state, action) => {
+                state.error = action.payload;
             });
     },
 });
 
-export const { addWorkout } = workoutsSlice.actions;
+export const {addWorkout} = workoutsSlice.actions;
 
 export default workoutsSlice.reducer;

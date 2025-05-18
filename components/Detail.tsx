@@ -1,8 +1,10 @@
-import React from "react";
-import { SafeAreaView, ScrollView, Text, View, Dimensions } from "react-native";
-import { format } from "date-fns";
-import { useSelector } from "react-redux";
-import { selectWorkoutById } from "@/state/workoutsSlice";
+import React, {useEffect, useState} from "react";
+import {SafeAreaView, ScrollView, Text, View} from "react-native";
+import {format} from "date-fns";
+import {useWorkouts} from "@/hooks/useWorkouts";
+import {UUID} from "crypto";
+import {Workout} from "@/domain/workout";
+
 
 // Meter component for ratings
 function RatingMeter({value, label, maxValue = 10, colorClass = "bg-green-500"}: {
@@ -87,17 +89,36 @@ function SectionHeader({title}: { title: string }) {
     );
 }
 
-export default function WorkoutDetailView({workoutId}: { workoutId: string }) {
-    const workout = useSelector((state: any) => selectWorkoutById(state, workoutId));
+export default function WorkoutDetailView({workoutId}: { workoutId: UUID }) {
+    const {getById} = useWorkouts();
+    const [workout, setWorkout] = useState<Workout | null>(null);
 
-    if (!workout) return <View><Text>Workout not found</Text></View>;
+    useEffect(() => {
+        const fetchWorkout = async () => {
+            console.log("Fetching workout", workoutId);
+            const data = await getById(workoutId);
+            console.log("Fetched workout", data);
+            if (!data) {
+                return null;
+            }
+            setWorkout(data);
+        };
+        fetchWorkout();
+    }, [workoutId]);
 
+    if (!workout) {
+        return (
+            <View className="flex-1 items-center justify-center">
+                <Text>Loading...</Text>
+            </View>
+        );
+    }
     const formattedDate = format(workout.date, "EEEE, MMMM d, yyyy");
 
     return (
         <SafeAreaView>
-            <ScrollView contentContainerStyle={{ flexGrow: 1 }} className="w-full">
-                <View className="w-full">
+            <ScrollView contentContainerStyle={{flexGrow: 1}} className="w-full">
+                <View className="w-full pb-10">
                     <View className="p-4 border-b border-gray-100 w-full">
                         <View className="flex-row justify-between items-center mb-2 w-full">
                             <Badge label={workout.type} variant="type"/>

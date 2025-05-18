@@ -3,8 +3,8 @@ import uuid from 'react-native-uuid';
 import {Workout} from "@/domain/workout";
 import {UUID} from "crypto";
 
-export const getDBConnection = async (): Promise<SQLite.SQLiteDatabase> => {
-    return await SQLite.openDatabaseAsync('test.db');
+export const getDBConnection = (): SQLite.SQLiteDatabase => {
+    return  SQLite.openDatabaseSync('test.db');
 };
 
 export const createTables = async (db: SQLite.SQLiteDatabase) => {
@@ -36,7 +36,7 @@ export const insertSampleWorkouts = async () => {
         {
             id: uuid.v4() as UUID,
             type: "JJB GI",
-            date: new Date("2025-05-12"),
+            date: new Date("2025-05-12").toISOString(),
             duration: 90,
             tags: ["guard", "pressure"],
             feeling: 8,
@@ -56,7 +56,7 @@ export const insertSampleWorkouts = async () => {
         {
             id: uuid.v4() as UUID,
             type: "JJB NO GI",
-            date: new Date("2025-05-10"),
+            date: new Date("2025-05-10").toISOString(),
             duration: 75,
             tags: ["leglock", "passing"],
             feeling: 6,
@@ -75,7 +75,7 @@ export const insertSampleWorkouts = async () => {
         {
             id: uuid.v4() as UUID,
             type: "GRAPPLING",
-            date: new Date("2025-05-08"),
+            date: new Date("2025-05-08").toISOString(),
             duration: 60,
             tags: ["wrestling", "scramble"],
             feeling: 7,
@@ -95,7 +95,7 @@ export const insertSampleWorkouts = async () => {
 
     await Promise.all(data.map(insertWorkout));
 };
-export const insertWorkout = async (workout: Workout) => {
+const insertWorkout = async (workout: Workout) => {
     const {
         id,
         type,
@@ -123,7 +123,7 @@ export const insertWorkout = async (workout: Workout) => {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
         id,
         type,
-        date.toISOString(),
+        date,
         duration,
         JSON.stringify(tags),
         feeling,

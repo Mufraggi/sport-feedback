@@ -3,7 +3,7 @@ import {UUID} from "crypto";
 export type Workout = {
     id: UUID;
     type: "JJB GI" | "JJB NO GI" | "GRAPPLING";
-    date: Date | string;
+    date: string;
     duration: number;
     tags: string[];
     feeling: number;

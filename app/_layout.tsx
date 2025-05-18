@@ -1,28 +1,27 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {SafeAreaView, StyleSheet} from 'react-native';
 import {Stack} from 'expo-router';
 import "../global.css"
 import {BottomSheetProvider} from "@/components/bottom-sheet/BottomSheetContext";
 import {GlobalBottomSheet} from "@/components/bottom-sheet/GlobalBottomSheet";
 import FabContainer from "@/components/fab-buttom/FabContainer";
-import {createTables, getDBConnection,insertSampleWorkouts} from "@/db/database";
+import {createTables, getDBConnection} from "@/db/database";
 import {Provider} from "react-redux";
 import {store} from "@/store/store";
 
 export default function RootLayout() {
+    const [isReady, setIsReady] = useState(false);
     useEffect(() => {
         const setupDb = async () => {
             const db = await getDBConnection();
-            //await createTables(db);
-
-            // À ne pas faire à chaque démarrage une fois que tu as des données réelles :
-            await insertSampleWorkouts();
+            await createTables(db);
+            //await insertSampleWorkouts();
         };
-
         setupDb().catch((err) => {
             console.error("Erreur lors de l'initialisation de la DB:", err);
         });
     }, []);
+
     return (
         <Provider store={store}>
             <BottomSheetProvider>
