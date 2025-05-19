@@ -5,12 +5,14 @@ import {UUID} from "crypto";
 
 interface WorkoutsState {
     workouts: Workout[];
+    currentWorkout?: Workout;
     loading: boolean;
     error?: string;
 }
 
 const initialState: WorkoutsState = {
     workouts: [],
+    currentWorkout: undefined,
     loading: false,
 };
 
@@ -65,7 +67,7 @@ export const createWorkout = createAsyncThunk<
 );
 
 export const getWorkoutById = createAsyncThunk<
-    Workout | undefined,
+    Workout,
     UUID,
     { extra: ThunkExtraArgument; rejectValue: string }
 >('workouts/getById',
@@ -78,7 +80,6 @@ export const getWorkoutById = createAsyncThunk<
             if (!workout) {
                 return rejectWithValue(`Workout with id ${id} not found`);
             }
-
             return {
                 ...workout,
                 date: workout.date,
@@ -95,33 +96,60 @@ export const workoutsSlice = createSlice({
     name: 'workouts',
     initialState,
     reducers: {
-        addWorkout: (state, action: PayloadAction<Workout>) => {
-            state.workouts.unshift(action.payload);
+        // Reducers synchrones si nécessaire (ex: clearCurrentWorkout)
+        clearCurrentWorkout: (state) => {
+            state.currentWorkout = undefined;
         },
-        // update/delete à ajouter ici si besoin
     },
     extraReducers: (builder) => {
         builder
+            // Load Workouts
             .addCase(loadWorkouts.pending, (state) => {
                 state.loading = true;
+                state.error = undefined;
             })
-            .addCase(loadWorkouts.fulfilled, (state, action) => {
+            .addCase(loadWorkouts.fulfilled, (state, action: PayloadAction<Workout[]>) => {
                 state.loading = false;
                 state.workouts = action.payload;
             })
             .addCase(loadWorkouts.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.error.message;
+                state.error = action.payload as string; // Vient de rejectWithValue
             })
-            .addCase(createWorkout.fulfilled, (state, action) => {
-                state.workouts.unshift(action.payload);
+
+            // Create Workout
+            .addCase(createWorkout.pending, (state) => {
+                state.loading = true;
+                state.error = undefined;
+            })
+            .addCase(createWorkout.fulfilled, (state, action: PayloadAction<Workout>) => {
+                state.loading = false;
+                state.workouts.unshift(action.payload); // Ajoute au début de la liste
+                // Optionnel: définir le workout créé comme currentWorkout
+                // state.currentWorkout = action.payload;
+            })
+            .addCase(createWorkout.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+
+            // Get Workout By Id
+            .addCase(getWorkoutById.pending, (state) => {
+                state.loading = true;
+                state.currentWorkout = undefined; // Optionnel: clearer pendant le chargement
+                state.error = undefined;
+            })
+            .addCase(getWorkoutById.fulfilled, (state, action: PayloadAction<Workout>) => {
+                state.loading = false;
+                state.currentWorkout = action.payload;
             })
             .addCase(getWorkoutById.rejected, (state, action) => {
+                state.loading = false;
                 state.error = action.payload;
-            });
+            })
     },
 });
 
-export const {addWorkout} = workoutsSlice.actions;
+export const {} = workoutsSlice.actions;
 
 export default workoutsSlice.reducer;
