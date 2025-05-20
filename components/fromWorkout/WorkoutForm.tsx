@@ -1,12 +1,19 @@
 import React, {useState} from "react";
-import {Button, ScrollView, Switch, Text, TextInput, View, StyleSheet} from "react-native";
+import {Button, Platform, ScrollView, StyleSheet, Switch, Text, TextInput, View} from "react-native";
 import {Controller, useFieldArray, useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {WorkoutFormValues, workoutSchema} from "@/components/fromWorkout/schemas/workoutSchema";
 import {Workout} from "@/domain/workout";
 import Slider from '@react-native-community/slider';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import {SliderInput} from "./SliderInput";
+
 
 export const WorkoutForm = () => {
+    const [date, setDate] = useState(new Date()); // Date initiale
+    const [showPicker, setShowPicker] = useState(false);
+    const [mode, setMode] = useState('date'); // 'date' ou 'time'
+
     const {
         control,
         handleSubmit,
@@ -42,12 +49,68 @@ export const WorkoutForm = () => {
     const [motivationLevel, setMotivationLevel] = useState(5);
     const [stressLevel, setStressLevel] = useState(5);
     const [sleepQuality, setSleepQuality] = useState(5);
+    const onChange = (event, selectedDate) => {
+        const currentDate = selectedDate || date;
+        // Sur Android, le picker se ferme après la sélection, sur iOS non.
+        // On ferme le picker après la sélection sur les deux plateformes pour une cohérence.
+        setShowPicker(Platform.OS === 'ios'); // Ferme le picker sur iOS aussi, le met à jour pour Android
 
+        setDate(currentDate);
+    };
+
+    const showMode = (currentMode) => {
+        setShowPicker(true);
+        setMode(currentMode);
+    };
+
+    const showDatePicker = () => {
+        showMode('date');
+    };
+
+    const showTimePicker = () => {
+        showMode('time');
+    };
     console.log(control._fields)
+    const formatDate = (dateToFormat) => {
+        return dateToFormat.toLocaleDateString('fr-FR', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+        });
+    };
+
+    const formatTime = (timeToFormat) => {
+        return timeToFormat.toLocaleTimeString('fr-FR', {
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+    };
     return (
         <ScrollView className="p-4">
             <Text className="text-xl font-bold mb-4">Créer un entraînement</Text>
+            <Text style={styles.title}>Sélectionnez Date et Heure</Text>
 
+            <View style={styles.buttonContainer}>
+                <Button onPress={showDatePicker} title="Choisir une date"/>
+            </View>
+            <Text style={styles.selectedText}>Date sélectionnée : {formatDate(date)}</Text>
+
+            <View style={styles.buttonContainer}>
+                <Button onPress={showTimePicker} title="Choisir une heure"/>
+            </View>
+            <Text style={styles.selectedText}>Heure sélectionnée : {formatTime(date)}</Text>
+
+            {showPicker && (
+                <DateTimePicker
+                    testID="dateTimePicker"
+                    value={date}
+                    mode={mode} // Sera 'date' ou 'time'
+                    is24Hour={true} // Utilise le format 24 heures
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'} // 'spinner' est souvent plus agréable sur iOS
+                    onChange={onChange}
+                />
+            )}
             {/* Type */}
             <Text className="text-base">Type</Text>
             <Controller
@@ -76,6 +139,7 @@ export const WorkoutForm = () => {
 
             {/* Duration */}
             <Text className="text-base">Durée (minutes)</Text>
+
             <Controller
                 control={control}
                 name="duration"
@@ -88,102 +152,20 @@ export const WorkoutForm = () => {
                     />
                 )}
             />
-
-            {/* Feeling */}
-            <Text className="text-base">Feeling (1 à 10)</Text>
             <Controller
                 control={control}
                 name="feeling"
                 render={({field}) => (
-                    <Slider
-                        style={{width: 200, height: 40}}
-                        minimumValue={0}
-                        maximumValue={10}
-                        renderStepNumber
-                        step={1}
-                        tapToSeek
+                    <SliderInput label="feeling" value={field.value}
+                                 onChange={(value) => field.onChange(Number(value))}
+                                 color="#4CAF50"/>
+                )}/>
 
-                        minimumTrackTintColor={'#123456'}
-                        maximumTrackTintColor={'#00FF00'}
-                        value={field.value}
-                        onValueChange={(value) => field.onChange(Number(value))}
-                    />
-                )}
-            />
-            <Text style={styles.label}>Feeling: {feeling}</Text>
-            <Slider
-                style={styles.slider}
-                minimumValue={0}
-                maximumValue={10}
-                step={1}
-                value={feeling}
-                onValueChange={setFeeling}
-                minimumTrackTintColor="#4CAF50" // Vert pour le bon feeling
-                maximumTrackTintColor="#D3D3D3"
-                thumbTintColor="#4CAF50"
-
-            />
-
-            {/* Slider pour Energy Level */}
-            <Text style={styles.label}>Niveau d'énergie: {energyLevel}</Text>
-            <Slider
-                style={styles.slider}
-                minimumValue={0}
-                maximumValue={10}
-                step={1}
-                value={energyLevel}
-                onValueChange={setEnergyLevel}
-                minimumTrackTintColor="#FFC107" // Jaune-Orange pour l'énergie
-                maximumTrackTintColor="#D3D3D3"
-                thumbTintColor="#FFC107"
-                
-            />
-
-            {/* Slider pour Motivation Level */}
-            <Text style={styles.label}>Niveau de motivation: {motivationLevel}</Text>
-            <Slider
-                style={styles.slider}
-                minimumValue={0}
-                maximumValue={10}
-                step={1}
-                value={motivationLevel}
-                onValueChange={setMotivationLevel}
-                minimumTrackTintColor="#2196F3" // Bleu pour la motivation
-                maximumTrackTintColor="#D3D3D3"
-                thumbTintColor="#2196F3"
-            />
-
-            {/* Slider pour Stress Level */}
-            <Text style={styles.label}>Niveau de stress: {stressLevel}</Text>
-            <Slider
-                style={styles.slider}
-                minimumValue={0}
-                maximumValue={10}
-                step={1}
-                value={stressLevel}
-                onValueChange={setStressLevel}
-                minimumTrackTintColor="#F44336" // Rouge pour le stress (on peut inverser la couleur si un faible stress est désiré)
-                maximumTrackTintColor="#D3D3D3"
-                thumbTintColor="#F44336"
-
-
-            />
-
-            {/* Slider pour Sleep Quality */}
-            <Text style={styles.label}>Qualité du sommeil: {sleepQuality}</Text>
-            <Slider
-                style={styles.slider}
-                minimumValue={0}
-                maximumValue={10}
-                step={1}
-                value={sleepQuality}
-                onValueChange={setSleepQuality}
-                minimumTrackTintColor="#9C27B0" // Violet pour le sommeil
-                maximumTrackTintColor="#D3D3D3"
-                thumbTintColor="#9C27B0"
-
-
-            />
+            <SliderInput label="Energy" value={energyLevel} onChange={setEnergyLevel} color="#FFC107"/>
+            <SliderInput label="Niveau de motivation" value={motivationLevel} onChange={setMotivationLevel}
+                         color="#2196F3"/>
+            <SliderInput label="Niveau de stress" value={stressLevel} onChange={setStressLevel} color="#F44336"/>
+            <SliderInput label="Qualité du sommeil" value={sleepQuality} onChange={setSleepQuality} color="#9C27B0"/>
 
             {/* Focus */}
             <Text className="text-base">Focus du jour</Text>
@@ -280,11 +262,6 @@ export const WorkoutForm = () => {
     );
 };
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-        backgroundColor: '#F5F5F5',
-    },
     label: {
         fontSize: 18,
         marginBottom: 10,
@@ -311,5 +288,29 @@ const styles = StyleSheet.create({
     track: {
         height: 8,
         borderRadius: 4,
+    },
+
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#f0f0f0',
+        padding: 20,
+    },
+    title: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        marginBottom: 30,
+        color: '#333',
+    },
+    buttonContainer: {
+        marginVertical: 10,
+        width: '80%',
+    },
+    selectedText: {
+        fontSize: 18,
+        marginVertical: 15,
+        color: '#555',
+        textAlign: 'center',
     },
 });
