@@ -2,16 +2,16 @@ import React from "react";
 import { View, Text, TextInput, Button, ScrollView, Switch } from "react-native";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {workoutSchema} from "@/components/fromWorkout/schemas/workoutSchema";
+import {WorkoutFormValues, workoutSchema} from "@/components/fromWorkout/schemas/workoutSchema";
 import {Workout} from "@/domain/workout";
-
+import Slider from '@react-native-community/slider';
 
 export const WorkoutForm = () => {
     const {
         control,
         handleSubmit,
         formState: { errors },
-    } = useForm<Workout>({
+    } = useForm<WorkoutFormValues>({
         resolver: zodResolver(workoutSchema),
         defaultValues: {
             type: "JJB GI",
@@ -37,7 +37,7 @@ export const WorkoutForm = () => {
     const onSubmit = (data: Workout) => {
         console.log("Workout submitted:", data);
     };
-
+    console.log(control._fields)
     return (
         <ScrollView className="p-4">
             <Text className="text-xl font-bold mb-4">Créer un entraînement</Text>
@@ -88,11 +88,17 @@ export const WorkoutForm = () => {
                 control={control}
                 name="feeling"
                 render={({ field }) => (
-                    <TextInput
-                        className="border p-2 rounded mb-2"
-                        keyboardType="numeric"
-                        value={field.value.toString()}
-                        onChangeText={(text) => field.onChange(Number(text))}
+                    <Slider
+                        style={{width: 200, height: 40}}
+                        minimumValue={0}
+                        maximumValue={10}
+                        renderStepNumber
+                        step={1}
+                        tapToSeek
+                        minimumTrackTintColor={'#123456'}
+                        maximumTrackTintColor={'#00FF00'}
+                        value={field.value}
+                        onValueChange={(value) => field.onChange(Number(value))}
                     />
                 )}
             />

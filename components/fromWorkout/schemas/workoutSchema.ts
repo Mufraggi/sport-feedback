@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const workoutSchema = z.object({
     type: z.enum(["JJB GI", "JJB NO GI", "GRAPPLING"]),
-    date: z.string().min(1, "Date requise").default(new Date().toISOString()),
+    date: z.string().min(1, "Date requise"),
     duration: z.number().min(1, "Durée minimale 1 minute"),
     tags: z.array(z.string()).optional(),
     feeling: z.number().min(1).max(10),
