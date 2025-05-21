@@ -1,11 +1,9 @@
 import React, {useState} from "react";
-import {Button, Platform, ScrollView, StyleSheet, Switch, Text, TextInput, View} from "react-native";
+import {Button, ScrollView, StyleSheet, Switch, Text, TextInput, View} from "react-native";
 import {Controller, useFieldArray, useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {WorkoutFormValues, workoutSchema} from "@/components/fromWorkout/schemas/workoutSchema";
-import {Workout} from "@/domain/workout";
 import {SliderInput} from "./SliderInput";
-import {SparringRoundsInput} from "./SparringRoundsInput";
 import {DateTimeSelector} from "./DateTimeSelector";
 
 
@@ -20,21 +18,16 @@ export const WorkoutForm = () => {
         resolver: zodResolver(workoutSchema),
         defaultValues: {
             type: "JJB GI",
-            date: new Date().toISOString(),
+            date: new Date(),
             duration: 60,
             feeling: 5,
-            motivationLevel:5,
-            stressLevel:5,
-            sleepQuality:5,
+            energyLevel: 5,
+            motivationLevel: 5,
+            stressLevel: 5,
+            sleepQuality: 5,
             achievedGoal: false,
-            sparringRounds: [],
             injuries: [],
         },
-    });
-
-    const {fields: sparringRounds, append: appendSparring, remove: removeSparring} = useFieldArray({
-        control,
-        name: "sparringRounds",
     });
 
     const {fields: injuries, append: appendInjury, remove: removeInjury} = useFieldArray({
@@ -42,12 +35,22 @@ export const WorkoutForm = () => {
         name: "injuries",
     });
 
-    const onSubmit = (data: Workout) => {
+    const onSubmit = (data: WorkoutFormValues) => {
         console.log("Workout submitted:", data);
     };
+    console.log("Form errors:", errors);
     return (
         <ScrollView className="p-4">
-            <DateTimeSelector date={date} onChangeDate={setDate}/>
+            <Controller
+                control={control}
+                name="date"
+                render={({field: {onChange, value}}) => (
+                    <DateTimeSelector
+                        date={value instanceof Date ? value : new Date(value)}
+                        onChangeDate={(val) => onChange(val)} // ici, val est déjà une Date
+                    />
+                )}
+            />
 
             {/* Type */}
             <Text className="text-base">Type</Text>
@@ -63,6 +66,13 @@ export const WorkoutForm = () => {
                     </View>
                 )}
             />
+            <Controller
+                control={control}
+                name="energyLevel"
+                render={({field}) => (
+                    <SliderInput label="energyLevel" value={field.value}
+                                 onChange={(value) => field.onChange(Number(value))}
+                                 color="#4CAF50"/>)}/>
             <Controller
                 control={control}
                 name="feeling"
@@ -124,9 +134,6 @@ export const WorkoutForm = () => {
                 )}
             />
 
-            {/* Sparring Rounds */}
-            <SparringRoundsInput control={control} sparringRounds={sparringRounds} append={() => appendSparring({})}
-                                 remove={removeSparring}/>
             {/* Injuries */}
             <Text className="text-lg font-semibold mt-4 mb-2">Blessures</Text>
             {injuries.map((item, index) => (
