@@ -4,15 +4,13 @@ import {Controller, useFieldArray, useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {WorkoutFormValues, workoutSchema} from "@/components/fromWorkout/schemas/workoutSchema";
 import {Workout} from "@/domain/workout";
-import Slider from '@react-native-community/slider';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import {SliderInput} from "./SliderInput";
+import {SparringRoundsInput} from "./SparringRoundsInput";
+import {DateTimeSelector} from "./DateTimeSelector";
 
 
 export const WorkoutForm = () => {
-    const [date, setDate] = useState(new Date()); // Date initiale
-    const [showPicker, setShowPicker] = useState(false);
-    const [mode, setMode] = useState('date'); // 'date' ou 'time'
+    const [date, setDate] = useState(new Date());
 
     const {
         control,
@@ -25,6 +23,9 @@ export const WorkoutForm = () => {
             date: new Date().toISOString(),
             duration: 60,
             feeling: 5,
+            motivationLevel:5,
+            stressLevel:5,
+            sleepQuality:5,
             achievedGoal: false,
             sparringRounds: [],
             injuries: [],
@@ -44,73 +45,10 @@ export const WorkoutForm = () => {
     const onSubmit = (data: Workout) => {
         console.log("Workout submitted:", data);
     };
-    const [feeling, setFeeling] = useState(5);
-    const [energyLevel, setEnergyLevel] = useState(5);
-    const [motivationLevel, setMotivationLevel] = useState(5);
-    const [stressLevel, setStressLevel] = useState(5);
-    const [sleepQuality, setSleepQuality] = useState(5);
-    const onChange = (event, selectedDate) => {
-        const currentDate = selectedDate || date;
-        // Sur Android, le picker se ferme après la sélection, sur iOS non.
-        // On ferme le picker après la sélection sur les deux plateformes pour une cohérence.
-        setShowPicker(Platform.OS === 'ios'); // Ferme le picker sur iOS aussi, le met à jour pour Android
-
-        setDate(currentDate);
-    };
-
-    const showMode = (currentMode) => {
-        setShowPicker(true);
-        setMode(currentMode);
-    };
-
-    const showDatePicker = () => {
-        showMode('date');
-    };
-
-    const showTimePicker = () => {
-        showMode('time');
-    };
-    console.log(control._fields)
-    const formatDate = (dateToFormat) => {
-        return dateToFormat.toLocaleDateString('fr-FR', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-        });
-    };
-
-    const formatTime = (timeToFormat) => {
-        return timeToFormat.toLocaleTimeString('fr-FR', {
-            hour: '2-digit',
-            minute: '2-digit',
-        });
-    };
     return (
         <ScrollView className="p-4">
-            <Text className="text-xl font-bold mb-4">Créer un entraînement</Text>
-            <Text style={styles.title}>Sélectionnez Date et Heure</Text>
+            <DateTimeSelector date={date} onChangeDate={setDate}/>
 
-            <View style={styles.buttonContainer}>
-                <Button onPress={showDatePicker} title="Choisir une date"/>
-            </View>
-            <Text style={styles.selectedText}>Date sélectionnée : {formatDate(date)}</Text>
-
-            <View style={styles.buttonContainer}>
-                <Button onPress={showTimePicker} title="Choisir une heure"/>
-            </View>
-            <Text style={styles.selectedText}>Heure sélectionnée : {formatTime(date)}</Text>
-
-            {showPicker && (
-                <DateTimePicker
-                    testID="dateTimePicker"
-                    value={date}
-                    mode={mode} // Sera 'date' ou 'time'
-                    is24Hour={true} // Utilise le format 24 heures
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'} // 'spinner' est souvent plus agréable sur iOS
-                    onChange={onChange}
-                />
-            )}
             {/* Type */}
             <Text className="text-base">Type</Text>
             <Controller
@@ -125,33 +63,6 @@ export const WorkoutForm = () => {
                     </View>
                 )}
             />
-
-            {/* Date */}
-            <Text className="text-base">Date (YYYY-MM-DD)</Text>
-            <Controller
-                control={control}
-                name="date"
-                render={({field}) => (
-                    <TextInput className="border p-2 rounded mb-2" placeholder="2025-05-18" {...field} />
-                )}
-            />
-            {errors.date && <Text className="text-red-500">{errors.date.message}</Text>}
-
-            {/* Duration */}
-            <Text className="text-base">Durée (minutes)</Text>
-
-            <Controller
-                control={control}
-                name="duration"
-                render={({field}) => (
-                    <TextInput
-                        className="border p-2 rounded mb-2"
-                        keyboardType="numeric"
-                        value={field.value.toString()}
-                        onChangeText={(text) => field.onChange(Number(text))}
-                    />
-                )}
-            />
             <Controller
                 control={control}
                 name="feeling"
@@ -160,12 +71,37 @@ export const WorkoutForm = () => {
                                  onChange={(value) => field.onChange(Number(value))}
                                  color="#4CAF50"/>
                 )}/>
+            <Controller
+                control={control}
+                name="motivationLevel"
+                render={({field}) => (
+                    <SliderInput label="Niveau de motivation"
+                                 value={field.value}
+                                 onChange={(value) => field.onChange(Number(value))}
+                                 color="#2196F3"/>
+                )}/>
+            <Controller
+                control={control}
+                name="stressLevel"
+                render={({field}) => (
+                    <SliderInput label="Niveau de stress"
+                                 value={field.value}
+                                 onChange={(value) => field.onChange(Number(value))}
+                                 color="#F44336"/>
 
-            <SliderInput label="Energy" value={energyLevel} onChange={setEnergyLevel} color="#FFC107"/>
-            <SliderInput label="Niveau de motivation" value={motivationLevel} onChange={setMotivationLevel}
-                         color="#2196F3"/>
-            <SliderInput label="Niveau de stress" value={stressLevel} onChange={setStressLevel} color="#F44336"/>
-            <SliderInput label="Qualité du sommeil" value={sleepQuality} onChange={setSleepQuality} color="#9C27B0"/>
+                )}/>
+            <Controller
+                control={control}
+                name="sleepQuality"
+                render={({field}) => (
+                    <SliderInput label="Qualité du sommeil"
+                                 value={field.value}
+                                 onChange={(value) => field.onChange(Number(value))}
+                                 color="#9C27B0"/>
+
+
+                )}/>
+
 
             {/* Focus */}
             <Text className="text-base">Focus du jour</Text>
@@ -189,43 +125,8 @@ export const WorkoutForm = () => {
             />
 
             {/* Sparring Rounds */}
-            <Text className="text-lg font-semibold mt-4 mb-2">Sparrings</Text>
-            {sparringRounds.map((item, index) => (
-                <View key={item.id} className="mb-4 border p-2 rounded">
-                    <Text className="text-sm font-medium">Partenaire</Text>
-                    <Controller
-                        control={control}
-                        name={`sparringRounds.${index}.partner`}
-                        render={({field}) => <TextInput className="border p-1 rounded mb-1" {...field} />}
-                    />
-                    <Text className="text-sm font-medium">Résultat</Text>
-                    <Controller
-                        control={control}
-                        name={`sparringRounds.${index}.outcome`}
-                        render={({field: {onChange, value}}) => (
-                            <View className="flex-row justify-between my-1">
-                                {["win", "lose", "draw", "unknown"].map((result) => (
-                                    <Button
-                                        key={result}
-                                        title={result}
-                                        onPress={() => onChange(result)}
-                                        color={value === result ? "green" : "gray"}
-                                    />
-                                ))}
-                            </View>
-                        )}
-                    />
-                    <Text className="text-sm font-medium">Notes</Text>
-                    <Controller
-                        control={control}
-                        name={`sparringRounds.${index}.notes`}
-                        render={({field}) => <TextInput className="border p-1 rounded" {...field} />}
-                    />
-                    <Button title="Supprimer" onPress={() => removeSparring(index)} color="red"/>
-                </View>
-            ))}
-            <Button title="Ajouter un sparring" onPress={() => appendSparring({partner: "", outcome: "unknown"})}/>
-
+            <SparringRoundsInput control={control} sparringRounds={sparringRounds} append={() => appendSparring({})}
+                                 remove={removeSparring}/>
             {/* Injuries */}
             <Text className="text-lg font-semibold mt-4 mb-2">Blessures</Text>
             {injuries.map((item, index) => (
