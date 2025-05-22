@@ -1,9 +1,9 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect} from "react";
 import {SafeAreaView, ScrollView, Text, View} from "react-native";
 import {format} from "date-fns";
-import {useWorkouts} from "@/hooks/useWorkouts";
+import {useAppDispatch, useAppSelector} from "@/hooks/useWorkouts";
 import {UUID} from "crypto";
-import {Workout} from "@/domain/workout";
+import {getWorkoutById} from "@/state/workoutsSlice";
 
 
 // Meter component for ratings
@@ -90,30 +90,27 @@ function SectionHeader({title}: { title: string }) {
 }
 
 export default function WorkoutDetailView({workoutId}: { workoutId: UUID }) {
-    const {getById} = useWorkouts();
-    const [workout, setWorkout] = useState<Workout | null>(null);
+    const dispatch = useAppDispatch();
+    const {
+        currentWorkout, // Renommé en currentWorkout pour correspondre au state
+        loading,
+        error
+    } = useAppSelector((state) => state.workouts); // Accéder à tout le state pertinent
 
     useEffect(() => {
-        const fetchWorkout = async () => {
-            console.log("Fetching workout", workoutId);
-            const data = await getById(workoutId);
-            console.log("Fetched workout", data);
-            if (!data) {
-                return null;
-            }
-            setWorkout(data);
-        };
-        fetchWorkout();
-    }, [workoutId]);
-
-    if (!workout) {
+        if (workoutId) {
+            dispatch(getWorkoutById(workoutId));
+        }
+    }, [dispatch, workoutId]); // Dépendances de l'effet
+    console.log(currentWorkout)
+    if (loading || !currentWorkout) {
         return (
             <View className="flex-1 items-center justify-center">
                 <Text>Loading...</Text>
             </View>
         );
     }
-    const formattedDate = format(workout.date, "EEEE, MMMM d, yyyy");
+    const formattedDate = format(currentWorkout.date, "EEEE, MMMM d, yyyy");
 
     return (
         <SafeAreaView>
@@ -121,13 +118,13 @@ export default function WorkoutDetailView({workoutId}: { workoutId: UUID }) {
                 <View className="w-full pb-10">
                     <View className="p-4 border-b border-gray-100 w-full">
                         <View className="flex-row justify-between items-center mb-2 w-full">
-                            <Badge label={workout.type} variant="type"/>
+                            <Badge label={currentWorkout.type} variant="type"/>
                             <Text className="text-sm font-medium text-gray-600">
-                                {workout.duration} minutes
+                                {currentWorkout.duration} minutes
                             </Text>
                         </View>
                         <Text className="text-lg font-bold text-gray-800 mb-1">
-                            {workout.focusOfTheDay}
+                            {currentWorkout.focusOfTheDay}
                         </Text>
                         <Text className="text-sm text-gray-600">
                             {formattedDate}
@@ -136,52 +133,52 @@ export default function WorkoutDetailView({workoutId}: { workoutId: UUID }) {
                     <View className="p-4 w-full">
                         <View className="mb-4 flex-row items-center w-full">
                             <View className={`w-6 h-6 rounded-full items-center justify-center ${
-                                workout.achievedGoal ? "bg-green-100" : "bg-red-100"
+                                currentWorkout.achievedGoal ? "bg-green-100" : "bg-red-100"
                             }`}>
                                 <Text className={`text-xs font-bold ${
-                                    workout.achievedGoal ? "text-green-700" : "text-red-700"
+                                    currentWorkout.achievedGoal ? "text-green-700" : "text-red-700"
                                 }`}>
-                                    {workout.achievedGoal ? "✓" : "✗"}
+                                    {currentWorkout.achievedGoal ? "✓" : "✗"}
                                 </Text>
                             </View>
                             <Text className="ml-2 text-sm text-gray-700">
-                                {workout.achievedGoal
+                                {currentWorkout.achievedGoal
                                     ? "Goal achieved"
                                     : "Goal not achieved"}
                             </Text>
                         </View>
                         <SectionHeader title="Session Metrics"/>
                         <RatingMeter
-                            value={workout.feeling}
+                            value={currentWorkout.feeling}
                             label="Overall Feeling"
                             colorClass="bg-green-500"
                         />
                         <RatingMeter
-                            value={workout.energyLevel || 0}
+                            value={currentWorkout.energyLevel || 0}
                             label="Energy Level"
                             colorClass="bg-blue-500"
                         />
                         <RatingMeter
-                            value={workout.motivationLevel || 0}
+                            value={currentWorkout.motivationLevel || 0}
                             label="Motivation"
                             colorClass="bg-purple-500"
                         />
                         <RatingMeter
-                            value={workout.sleepQuality || 0}
+                            value={currentWorkout.sleepQuality || 0}
                             label="Sleep Quality"
                             colorClass="bg-indigo-500"
                         />
                         <RatingMeter
-                            value={workout.stressLevel || 0}
+                            value={currentWorkout.stressLevel || 0}
                             label="Stress Level"
                             colorClass="bg-red-500"
                         />
 
 
-                        {workout.sparringRounds && workout.sparringRounds.length > 0 && (
+                        {currentWorkout.sparringRounds && currentWorkout.sparringRounds.length > 0 && (
                             <View className="mt-4 w-full">
                                 <SectionHeader title="Sparring Rounds"/>
-                                {workout.sparringRounds.map((round, index) => (
+                                {currentWorkout.sparringRounds.map((round, index) => (
                                     <View key={index} className="mb-3 p-3 bg-gray-50 rounded-lg w-full">
                                         <View className="flex-row justify-between items-center mb-1">
                                             <Text className="font-medium">Partner: {round.partner}</Text>
@@ -195,20 +192,20 @@ export default function WorkoutDetailView({workoutId}: { workoutId: UUID }) {
                             </View>
                         )}
 
-                        {workout.notes && (
+                        {currentWorkout.notes && (
                             <View className="mt-4 w-full">
                                 <SectionHeader title="Notes"/>
                                 <Text className="text-sm text-gray-700 mb-3">
-                                    {workout.notes}
+                                    {currentWorkout.notes}
                                 </Text>
                             </View>
                         )}
 
 
-                        {workout.injuries && workout.injuries.length > 0 && (
+                        {currentWorkout.injuries && currentWorkout.injuries.length > 0 && (
                             <View className="mt-4 w-full">
                                 <SectionHeader title="Injuries"/>
-                                {workout.injuries.map((injury, index) => (
+                                {currentWorkout.injuries.map((injury, index) => (
                                     <Text key={index} className="text-sm text-red-600 mb-1">
                                         • {injury}
                                     </Text>
@@ -216,11 +213,11 @@ export default function WorkoutDetailView({workoutId}: { workoutId: UUID }) {
                             </View>
                         )}
 
-                        {workout.tags && workout.tags.length > 0 && (
+                        {currentWorkout.tags && currentWorkout.tags.length > 0 && (
                             <View className="mt-4 w-full">
                                 <SectionHeader title="Tags"/>
                                 <View className="flex-row flex-wrap w-full">
-                                    {workout.tags.map((tag) => (
+                                    {currentWorkout.tags.map((tag) => (
                                         <View key={tag} className="mr-2 mb-2">
                                             <Badge label={tag}/>
                                         </View>
