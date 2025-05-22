@@ -5,7 +5,7 @@ import "../global.css"
 import {BottomSheetProvider} from "@/components/bottom-sheet/BottomSheetContext";
 import {GlobalBottomSheet} from "@/components/bottom-sheet/GlobalBottomSheet";
 import FabContainer from "@/components/fab-buttom/FabContainer";
-import {createTables, getDBConnection} from "@/db/database";
+import {createTables, getDBConnection, insertSampleWorkouts} from "@/db/database";
 import {Provider} from "react-redux";
 import {store} from "@/store/store";
 
@@ -15,7 +15,7 @@ export default function RootLayout() {
         const setupDb = async () => {
             const db = await getDBConnection();
             await createTables(db);
-            //await insertSampleWorkouts();
+            await insertSampleWorkouts();
         };
         setupDb().catch((err) => {
             console.error("Erreur lors de l'initialisation de la DB:", err);

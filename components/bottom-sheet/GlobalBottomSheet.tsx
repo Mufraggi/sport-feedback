@@ -4,7 +4,9 @@ import BottomSheetComponent from "@/components/bottom-sheet/BottomSheet";
 import {Text, TouchableOpacity, View} from "react-native";
 import WorkoutDetailView from "@/components/Detail";
 import {UUID} from "crypto";
-import {WorkoutForm} from "@/components/fromWorkout/WorkoutForm";
+import { WorkoutForm2 } from "../fromWorkout/WorkoutForm2";
+
+
 
 export function GlobalBottomSheet() {
     const {isOpen, closeBottomSheet, activePage, params} = useBottomSheet();
@@ -14,7 +16,7 @@ export function GlobalBottomSheet() {
         switch (activePage) {
             case 'page1':
                 return (
-                    <WorkoutForm/>
+                    <WorkoutForm2/>
                 );
             case 'page2':
                 if (params?.id) {

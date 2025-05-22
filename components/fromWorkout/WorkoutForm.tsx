@@ -1,17 +1,21 @@
+// WorkoutForm.tsx
 import React from "react";
-import {Button, ScrollView, StyleSheet, Switch, Text, TextInput, View} from "react-native";
-import {Controller, useFieldArray, useForm} from "react-hook-form";
+import {ScrollView, StyleSheet, View} from "react-native";
+import {useFieldArray, useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {WorkoutFormValues, workoutSchema} from "@/components/fromWorkout/schemas/workoutSchema";
-import {SliderInput} from "./SliderInput";
-import {DateTimeSelector} from "./DateTimeSelector";
-
+import {ProgressStep, ProgressSteps} from "react-native-progress-steps";
+import {DateTimeStep} from "./stepper/DateTimeStep";
+import {TrainingInfoStep} from "./stepper/TrainingInfoStep";
+import {FeelingsStep} from "./stepper/FeelingsStep";
+import {NotesStep} from "./stepper/NotesStep";
 
 export const WorkoutForm = () => {
     const {
         control,
         handleSubmit,
         formState: {errors},
+        trigger,
     } = useForm<WorkoutFormValues>({
         resolver: zodResolver(workoutSchema),
         defaultValues: {
@@ -25,10 +29,11 @@ export const WorkoutForm = () => {
             sleepQuality: 5,
             achievedGoal: false,
             injuries: [],
+            focusOfTheDay: ""
         },
     });
 
-    const {fields: injuries, append: appendInjury, remove: removeInjury} = useFieldArray({
+    const injuries = useFieldArray({
         control,
         name: "injuries",
     });
@@ -36,187 +41,118 @@ export const WorkoutForm = () => {
     const onSubmit = (data: WorkoutFormValues) => {
         console.log("Workout submitted:", data);
     };
-    console.log("Form errors:", errors);
+
+    const validateStep1 = async (): Promise<boolean> => await trigger(['date']);
+    const validateStep2 = async (): Promise<boolean> => await trigger(['type', 'duration', 'focusOfTheDay']);
+    const validateStep3 = async (): Promise<boolean> => await trigger(['feeling', 'energyLevel', 'motivationLevel', 'stressLevel', 'sleepQuality']);
+
     return (
-        <ScrollView className="p-4">
-            <Controller
-                control={control}
-                name="date"
-                render={({field: {onChange, value}}) => (
-                    <DateTimeSelector
-                        date={value instanceof Date ? value : new Date(value)}
-                        onChangeDate={(val) => onChange(val)} // ici, val est déjà une Date
-                    />
-                )}
-            />
+        <View style={styles.container}>
+            <ProgressSteps
+                activeStepIconBorderColor="#4CAF50"
+                activeLabelColor="#4CAF50"
+                activeStepIconColor="#4CAF50"
+                completedStepIconColor="#4CAF50"
+                completedProgressBarColor="#4CAF50"
+                completedCheckColor="#ffffff"
+            >
+                <ProgressStep
+                    label="Date & Heure"
+                    onNext={validateStep1}
+                    errors={!!errors.date}
+                    nextBtnStyle={styles.nextButton}
+                    previousBtnStyle={styles.previousButton}
+                    nextBtnTextStyle={styles.buttonText}
+                    previousBtnTextStyle={styles.buttonText}
+                >
+                    <ScrollView contentContainerStyle={styles.scrollContent}>
+                        <DateTimeStep control={control} errors={errors} />
+                    </ScrollView>
+                </ProgressStep>
 
-            {/* Type */}
-            <Text className="text-base">Type</Text>
-            <Controller
-                control={control}
-                name="type"
-                render={({field: {onChange, value}}) => (
-                    <View className="flex-row justify-between mb-2">
-                        {["JJB GI", "JJB NO GI", "GRAPPLING"].map((type) => (
-                            <Button key={type} title={type} onPress={() => onChange(type)}
-                                    color={value === type ? "blue" : "gray"}/>
-                        ))}
-                    </View>
-                )}
-            />
-            <Controller
-                control={control}
-                name="energyLevel"
-                render={({field}) => (
-                    <SliderInput label="energyLevel" value={field.value}
-                                 onChange={(value) => field.onChange(Number(value))}
-                                 color="#4CAF50"/>)}/>
-            <Controller
-                control={control}
-                name="feeling"
-                render={({field}) => (
-                    <SliderInput label="feeling" value={field.value}
-                                 onChange={(value) => field.onChange(Number(value))}
-                                 color="#4CAF50"/>
-                )}/>
-            <Controller
-                control={control}
-                name="motivationLevel"
-                render={({field}) => (
-                    <SliderInput label="Niveau de motivation"
-                                 value={field.value}
-                                 onChange={(value) => field.onChange(Number(value))}
-                                 color="#2196F3"/>
-                )}/>
-            <Controller
-                control={control}
-                name="stressLevel"
-                render={({field}) => (
-                    <SliderInput label="Niveau de stress"
-                                 value={field.value}
-                                 onChange={(value) => field.onChange(Number(value))}
-                                 color="#F44336"/>
+                <ProgressStep
+                    label="Entraînement"
+                    onNext={validateStep2}
+                    onPrevious={() => Promise.resolve(true)}
+                    errors={!!(errors.type || errors.duration || errors.focusOfTheDay)}
+                    nextBtnStyle={styles.nextButton}
+                    previousBtnStyle={styles.previousButton}
+                    nextBtnTextStyle={styles.buttonText}
+                    previousBtnTextStyle={styles.buttonText}
+                >
+                    <ScrollView contentContainerStyle={styles.scrollContent}>
+                        <TrainingInfoStep control={control} errors={errors} />
+                    </ScrollView>
+                </ProgressStep>
 
-                )}/>
-            <Controller
-                control={control}
-                name="sleepQuality"
-                render={({field}) => (
-                    <SliderInput label="Qualité du sommeil"
-                                 value={field.value}
-                                 onChange={(value) => field.onChange(Number(value))}
-                                 color="#9C27B0"/>
+                <ProgressStep
+                    label="Ressenti"
+                    onNext={validateStep3}
+                    onPrevious={() => Promise.resolve(true)}
+                    errors={!!(errors.feeling || errors.energyLevel || errors.motivationLevel || errors.stressLevel || errors.sleepQuality)}
+                    nextBtnStyle={styles.nextButton}
+                    previousBtnStyle={styles.previousButton}
+                    nextBtnTextStyle={styles.buttonText}
+                    previousBtnTextStyle={styles.buttonText}
+                >
+                    <ScrollView contentContainerStyle={styles.scrollContent}>
+                        <FeelingsStep control={control} errors={errors} />
+                    </ScrollView>
+                </ProgressStep>
 
-
-                )}/>
-
-
-            {/* Focus */}
-            <Text className="text-base">Focus du jour</Text>
-            <Controller
-                control={control}
-                name="focusOfTheDay"
-                render={({field}) => (
-                    <TextInput className="border p-2 rounded mb-2"
-                               placeholder="Ex: travail sur le passing" {...field} />
-                )}
-            />
-
-            {/* Goal */}
-            <Text className="text-base">Objectif atteint ?</Text>
-            <Controller
-                control={control}
-                name="achievedGoal"
-                render={({field: {onChange, value}}) => (
-                    <Switch value={value} onValueChange={onChange} className="mb-2"/>
-                )}
-            />
-
-            {/* Injuries */}
-            <Text className="text-lg font-semibold mt-4 mb-2">Blessures</Text>
-            {injuries.map((item, index) => (
-                <View key={item.id} className="mb-2 flex-row items-center gap-2">
-                    <Controller
-                        control={control}
-                        name={`injuries.${index}`}
-                        render={({field}) => <TextInput className="border p-2 rounded flex-1" {...field} />}
-                    />
-                    <Button title="X" color="red" onPress={() => removeInjury(index)}/>
-                </View>
-            ))}
-            <Button title="Ajouter une blessure" onPress={() => appendInjury("")}/>
-
-            {/* Notes */}
-            <Text className="text-base mt-4">Notes</Text>
-            <Controller
-                control={control}
-                name="notes"
-                render={({field}) => (
-                    <TextInput
-                        className="border p-2 rounded mb-4"
-                        multiline
-                        numberOfLines={4}
-                        placeholder="Commentaires libres"
-                        {...field}
-                    />
-                )}
-            />
-
-            {/* Submit */}
-            <Button title="Valider" onPress={handleSubmit(onSubmit)}/>
-        </ScrollView>
+                <ProgressStep
+                    label="Notes"
+                    onSubmit={handleSubmit(onSubmit)}
+                    onPrevious={() => Promise.resolve(true)}
+                    finishBtnText="Valider l'entraînement"
+                    nextBtnStyle={styles.finishButton}
+                    previousBtnStyle={styles.previousButton}
+                    nextBtnTextStyle={styles.buttonText}
+                    previousBtnTextStyle={styles.buttonText}
+                >
+                    <ScrollView contentContainerStyle={styles.scrollContent}>
+                        <NotesStep control={control} errors={errors} injuries={injuries} />
+                    </ScrollView>
+                </ProgressStep>
+            </ProgressSteps>
+        </View>
     );
 };
-const styles = StyleSheet.create({
-    label: {
-        fontSize: 18,
-        marginBottom: 10,
-        fontWeight: 'bold',
-        color: '#333',
-    },
-    slider: {
-        width: '100%',
-        height: 40,
-        marginBottom: 20,
-    },
-    thumb: {
-        width: 25,
-        height: 25,
-        borderRadius: 15,
-        borderWidth: 2,
-        borderColor: '#FFF', // Bordure blanche pour le pouce
-        shadowColor: '#000', // Ombre portée
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
-    },
-    track: {
-        height: 8,
-        borderRadius: 4,
-    },
 
+const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#f0f0f0',
+        backgroundColor: '#fff',
+    },
+    scrollContent: {
         padding: 20,
+        paddingBottom: 100, // pour laisser de la place aux boutons
     },
-    title: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        marginBottom: 30,
-        color: '#333',
+    nextButton: {
+        backgroundColor: '#4CAF50',
+        paddingHorizontal: 24,
+        paddingVertical: 14,
+        borderRadius: 8,
+        marginHorizontal: 10,
     },
-    buttonContainer: {
-        marginVertical: 10,
-        width: '80%',
+    previousButton: {
+        backgroundColor: '#757575',
+        paddingHorizontal: 24,
+        paddingVertical: 14,
+        borderRadius: 8,
+        marginHorizontal: 10,
     },
-    selectedText: {
-        fontSize: 18,
-        marginVertical: 15,
-        color: '#555',
+    finishButton: {
+        backgroundColor: '#2196F3',
+        paddingHorizontal: 24,
+        paddingVertical: 14,
+        borderRadius: 8,
+        marginHorizontal: 10,
+    },
+    buttonText: {
+        color: '#ffffff',
+        fontSize: 16,
+        fontWeight: '600',
         textAlign: 'center',
     },
 });
