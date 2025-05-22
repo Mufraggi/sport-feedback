@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React from "react";
 import {Button, ScrollView, StyleSheet, Switch, Text, TextInput, View} from "react-native";
 import {Controller, useFieldArray, useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
@@ -8,8 +8,6 @@ import {DateTimeSelector} from "./DateTimeSelector";
 
 
 export const WorkoutForm = () => {
-    const [date, setDate] = useState(new Date());
-
     const {
         control,
         handleSubmit,
